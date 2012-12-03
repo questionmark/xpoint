@@ -1,0 +1,111 @@
+﻿<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>View activites</title>
+ 
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script  type="text/javascript" src="javascript/jquery.min.js"></script>
+    <script type="text/javascript" src="javascript/qmERS.config.js"></script>
+    <script type="text/javascript" src="javascript/qmERS.js"></script>
+
+<script type="text/javascript" >
+
+    // Load the Visualization API and the piechart package.
+    google.load('visualization', '1.0', { 'packages': ['corechart'] });
+
+
+   
+    var activityListFunc = function ListActivities(res) {
+
+        $("#summary").html('');
+        $("#activities").html('');
+
+        $("#summary").append(res.count + " activities found");
+        var activities = res.activities;
+
+        $.each(activities, function () {
+            $("#activities").append("<option>" + this.definition.name[g_language] + "</option>");
+        });
+
+        GetActivitySummary();
+    }
+
+
+    var activityDisplayFunc = function DisplayActivity(res) {
+
+        $("#result").html('');
+
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'verb');
+        data.addColumn('number', 'count');
+        data.addRows(res.count);
+
+        var verbs = res.verbs;
+
+        var row = 0;
+        $.each(verbs, function () {
+            //$("#result").append("<option>" + this.display[g_language] + " : " + this.count + "<br />");
+
+            data.setCell(row, 0, this.count + " " + this.display[g_language] );
+            data.setCell(row, 1, this.count);
+
+            row += 1;
+        });
+
+
+        var chart = new google.visualization.PieChart(document.getElementById('result'));
+        var title = $('#activities>option:selected').text() + " : " + res.total + " results";
+        chart.draw(data, { width: 600, height: 600, title: title });
+
+    }
+
+function LoadActivities() {
+    callERS($('#server').val(), "activity/summary/", "GET", g_version, "", activityListFunc, $('#user').val(), $('#key').val());
+}
+
+function GetActivitySummary() {
+    var activityName = escape($('#activities>option:selected').text());
+
+    callERS($('#server').val(), "verb/summary/?activityName=" + activityName, "GET", g_version, "", activityDisplayFunc, $('#user').val(), $('#key').val());
+}
+
+$(document).ready(function () {
+
+    // populate the drop down list with activities
+    LoadActivities();
+});
+
+
+</script>
+
+<style>
+body { font-family: Arial, Helvetica, sans-serif; }
+input { position: absolute; width: 500px; left: 140px; font-family: Arial, Helvetica, sans-serif;}
+#header {position: absolute;   top: 90px; width: 670px; left: 30px; font-size: large;}
+#banner {position: absolute; height: 67px; width: 670px; background-image: url('images/qmHeader.png'); background-repeat: no-repeat;}
+#title {position: absolute;  font-size: x-large; left: 330px; top: 20px; width: auto;}
+#formArea {position: absolute;  left: 30px; top: 140px }
+#result {position: absolute;  left: 30px; top: 260px }
+</style>
+</head>
+<body>
+<div id="banner">
+<span id="title">XPoint</span>
+</div>
+<div id="header">View a summary of activities in XPoint</div>
+<div id="formArea">
+Endpoint <input type="text" id="server" name="server" value="https://xpoint.questionmark.com/ers/public/statements/" size="40" /> <br />
+User <input type="text" id="user" name="user" value="consumer" size="10" /> <br />
+Key <input type="password" id="key" name="key" value="jD3ElTg57g318Jy4GAF2ELfEEzSXYhRy" size="32" /> <br />
+<br />
+<span id="summary"></span>&nbsp;<select id="activities" onchange="GetActivitySummary();" title="Select an activity"></select>&nbsp;<a href="javascript:LoadActivities(); "><img alt="Refresh" src="images/reload.png" style="vertical-align: middle" title="Refresh"/></a>
+</div>
+
+<div id="result">
+
+
+</div>
+</body>
+
+
+</html>

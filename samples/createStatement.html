@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Submit a statement</title>
+  <script  type="text/javascript" src="javascript/jquery.min.js"></script>
+  <script type="text/javascript" src="javascript/qmERS.js"></script>
+
+  <style>
+
+body { font-family: Arial, Helvetica, sans-serif; }
+input { position: absolute; width: 480px; left: 160px; font-family: Arial, Helvetica, sans-serif;}
+select { position: absolute; width: 480px; left: 160px; font-family: Arial, Helvetica, sans-serif; }
+#header {position: absolute;   top: 90px; width: 670px; left: 30px; font-size: large;}
+#banner {position: absolute; height: 67px; width: 670px; background-image: url('images/qmHeader.png'); background-repeat: no-repeat;}
+#title {position: absolute;  font-size: x-large; left: 330px; top: 20px; width: auto;}
+#formArea {position: absolute;  text-align: right; left: 30px; top: 140px }
+#output {position: absolute;  font-size: small;  white-space: pre-wrap; text-align: left; left: 30px; top: 340px; width: 640px; }
+
+
+</style>
+
+</head>
+<body>
+<div id="banner">
+<span id="title">XPoint</span>
+</div>
+<div id="header">Send a statement to an XAPI endpoint</div>
+<br>
+<div id="formArea">
+Endpoint <input type="text" id="server" name="server" value="https://xpoint.questionmark.com/ers/public/notify/" size="40" /> <br />
+User <input type="text" id="user" name="user" value="producer" size="10" /> <br />
+Key <input type="password" id="key" name="key" value="nykUv2aroGfYGxwXBofGwGxCVLE61v54" size="32" /> <br />
+
+<br />
+
+Actor name <input type="text" id="actorName" name="actorName" value="" size="20" /><br /> 
+Actor email <input type="text" id="actorEmail" name="actorEmail" value="" size="20" /><br /> 
+Verb <input type="text" id="verb" name="verb" value="viewed" size="20" /><br /> 
+Activity ID <input type="text" id="activityId" name="activityId" value="" size="20" /><br /> 
+Activity type <input type="text" id="activityType" name="activityType" value="http://adlnet.gov/expapi/activities/media" size="20" /><br /> 
+Activity name <input type="text" id="activityName" name="activityName" value="Create a statement" size="20" /><br /> 
+Activity description <input type="text" id="activityDescription" name="activityDescription" value="" size="50" /><br /> 
+Percentage score <input type="text" id="score" name="score" value="" size="4" /><br /> 
+
+<input type="button" value="Submit" onclick="DoSubmit();" /><br />
+<div/>
+<div id="output">
+
+</div>
+<br />
+</body>
+
+<script type="text/javascript">
+
+    function DoSubmit() {
+
+    if ($("#actorName").val() == "") {
+        $("#actorName").focus();
+        alert("Actor name may not be blank");
+        return;
+    }
+
+    var scoreRaw = $("#score").val();
+    var scoreMax = "";
+    var scoreMin = "";
+    var scoreScaled = "";
+
+    if ((typeof scoreRaw != "undefined") && (scoreRaw != "")) {
+        scoreMax = 100;
+        scoreMin = 0
+        scoreScaled = 0.0 + (scoreRaw / scoreMax);
+    }
+
+    var statement = CreateStatement(
+            "en-US",
+            $("#actorName").val(),
+            $("#actorEmail").val(),
+            "",
+            $("#verb").val(),
+            $("#activityName").val(),
+            $("#activityDescription").val(),
+            $("#activityId").val(),
+            $("#activityType").val(),
+            scoreScaled,
+            scoreRaw,
+            scoreMin,
+            scoreMax);
+
+    $("#output").html(statement);
+
+    submit(statement);
+}
+
+function submit(singleStatement) {
+
+    var server = $('#server').val();
+    var user = $('#user').val();
+
+    var key = $('#key').val();
+
+    sendStatement(server, singleStatement, function (res) { alert("Statement " + res + " submitted");}, user, key);
+
+}
+
+</script>
+</html>
