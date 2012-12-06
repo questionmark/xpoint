@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<title>View logs</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script  type="text/javascript" src="javascript/jquery.min.js"></script>
+  <script type="text/javascript" src="javascript/qmERS.js"></script>
+  <script type="text/javascript">
+
+
+
+      function displayLog(record) {
+
+          var display = "";
+
+          
+          display = "<li>" + record.stored + " " + record.tenant + "\\" + record.user + " " + record.method + " " + record.uri.trunc(120); + " " + record.message + "</li>";
+
+
+          return display;
+      }
+
+     
+
+      function displayNext(next) {
+
+          var display = '<input id="nextBtn" type="button" value="&gt;&gt;" onclick="load(\'' + next + '\')" />';
+
+          return display;
+      }
+
+      function displayPrev(prev) {
+
+          var display = '<input id="prevBtn" type="button" value="&lt;&lt;" onclick="load(\'' + prev + '\')" />';
+
+          return display;
+      }
+
+      var displayFunc = function doDisplay(res) {
+          $("#logList").html('');
+          $("#prev").html('');
+          $("#next").html('');
+          var logs = res.records;
+
+          $.each(logs, function () {
+              $("#logList").append(displayLog(this));
+          });
+
+
+          if (res.next != null) {
+              $("#next").append(displayNext(res.next));
+          }
+          if (res.previous != null) {
+              $("#prev").append(displayPrev(res.previous));
+          }
+      }
+
+      function load(query) {
+
+          var server = $('#server').val();
+          var user = $('#user').val();
+          var key = $('#key').val();
+
+          $("#logList").html('');
+          $("#prev").html('');
+          $("#next").html('');
+          callERS(server, query, "GET", 0.95, "", displayFunc, user, key);
+      }
+
+</script>
+
+<style>
+
+body { font-family: Arial, Helvetica, sans-serif; }
+input { position: absolute; width: 500px; left: 140px; font-family: Arial, Helvetica, sans-serif;}
+select { position: absolute; width: 500px; left: 140px; font-family: Arial, Helvetica, sans-serif; }
+#header {position: absolute;   top: 90px; width: 670px; left: 30px; font-size: large;}
+#banner {position: absolute; height: 67px; width: 670px; background-image: url('images/qmHeader.png'); background-repeat: no-repeat;}
+#title {position: absolute;  font-size: x-large; left: 330px; top: 20px; width: auto;}
+#formArea {position: absolute;  text-align: right; left: 30px; top: 140px }
+#resultsArea {position: absolute;   left: 30px; top: 300px }
+#prevBtn {position: absolute;   left: 140px; width: 80px; }
+#nextBtn {position: absolute;   left: 560px; width: 80px; }
+
+</style>
+
+</head>
+<body>
+
+<div id="banner">
+<span id="title">XPoint</span>
+</div>
+<div id="header">View log records</div>
+<br>
+<div id="formArea">
+
+Endpoint <input type="text" id="server" name="server" value="https://xpoint.questionmark.com/ers/public/logs/" size="40" /> <br />
+User <input type="text" id="user" name="user" value="admin" size="10" /> <br />
+Key <input type="password" id="key" name="key" value="tg4eQBTZTYqCZCnBQTBuyIlU7ZtqOuyv" size="32" /> <br />
+Query<input type="text" id="query" name="query" value="" size="100" /> <br />
+<br />
+<input type="button" value="Search" onclick="load($('#query').val());" />
+</div>
+
+<div id="resultsArea">
+<span id="prev"></span>&nbsp;<span id="next"></span>
+<br />
+ 
+<ul id="logList"></ul>
+
+</div>
+</body>
+</html>

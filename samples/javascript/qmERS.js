@@ -322,6 +322,11 @@ function getSpName() {
 }
 
 
+/* String truncate with ellipsis */
+String.prototype.trunc = function (value) {
+    return this.substr(0, value - 1) + (this.length > value ? '...' : '');
+};
+
 // Base64 encoding
 
 var _PADCHAR = "=",
