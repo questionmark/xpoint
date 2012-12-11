@@ -123,7 +123,7 @@ function CreateStatement(language, actorName, actorEmail, actorEmailHash, verb, 
 /* *******************************************
 Make a call to XPoint
 
-endpoint - the URL of XPoint, e.g. "http://xpoint.questionmark.com/ers/public/statements/"
+endpoint - the URL of XPoint, e.g. "http://xpoint.questionmark.com/public/statements/"
 query - additional path and query string, e.g. "?$top=25"
 method - HTTP method : GET, POST, PUT or DELETE
 version - version of XAPI being used
@@ -168,7 +168,7 @@ function callERS(endpoint, query, method, version, data, resultHandler, user, pa
 /* *******************************************
 Send a statement to XPoint using JSONP
 
-endpoint - the URL of XPoint JSONP handler, e.g. "http://xpoint.questionmark.com/ers/public/notify/"
+endpoint - the URL of XPoint JSONP handler, e.g. "http://xpoint.questionmark.com/public/notify/"
 statement - the statement to submit in JSON
 resultHandler - function to handle the response form the lRS
 user - the name of the user (can be the same as the account name)
@@ -182,17 +182,6 @@ function sendStatement(endpoint, statement, resultHandler, user, password) {
     var url = endpoint + "?" + "Authorization=" + escape(authstring) + "&" + "statement=" + escape(statement);
 
     $.getJSON(url, resultHandler);
-
-    $.ajax({
-        type: 'GET',
-        url: url,
-        async: false,
-        contentType: "application/json",
-        dataType: 'jsonp',
-        success: function (res) {
-            resultHandler(res);
-        }
-    });
 
 }
 
