@@ -9,13 +9,14 @@
   <style>
 
 body { font-family: Arial, Helvetica, sans-serif; }
-input { position: absolute; width: 480px; left: 160px; font-family: Arial, Helvetica, sans-serif;}
+input, textarea { position: absolute; width: 480px; left: 160px; font-family: Arial, Helvetica, sans-serif;}
+input[type="button"] { position: absolute; top: 360px;  width: 480px; left: 160px; font-family: Arial, Helvetica, sans-serif;}
 select { position: absolute; width: 480px; left: 160px; font-family: Arial, Helvetica, sans-serif; }
 #header {position: absolute;   top: 90px; width: 670px; left: 30px; font-size: large;}
 #banner {position: absolute; height: 67px; width: 670px; background-image: url('images/qmHeader.png'); background-repeat: no-repeat;}
 #title {position: absolute;  font-size: x-large; left: 330px; top: 20px; width: auto;}
 #formArea {position: absolute;  text-align: right; left: 30px; top: 140px }
-#output {position: absolute;  font-size: small;  white-space: pre-wrap; text-align: left; left: 30px; top: 340px; width: 640px; }
+#output {position: absolute;  font-size: small;  white-space: pre-wrap; text-align: left; left: 30px; top: 440px; width: 640px; }
 
 
 </style>
@@ -42,6 +43,7 @@ Activity type <input type="text" id="activityType" name="activityType" value="ht
 Activity name <input type="text" id="activityName" name="activityName" value="Create a statement" size="20" /><br /> 
 Activity description <input type="text" id="activityDescription" name="activityDescription" value="" size="50" /><br /> 
 Percentage score <input type="text" id="score" name="score" value="" size="4" /><br /> 
+Response <textarea  id="comment" name="comment" rows="2" cols="40"></textarea><br /> 
 
 <input type="button" value="Submit" onclick="DoSubmit();" /><br />
 <div/>
@@ -85,7 +87,10 @@ Percentage score <input type="text" id="score" name="score" value="" size="4" />
             scoreScaled,
             scoreRaw,
             scoreMin,
-            scoreMax);
+            scoreMax,
+            // escape response text using fake div elment
+            $('<div/>').text($("#comment").val()).html()
+            );
 
     $("#output").html(statement);
 

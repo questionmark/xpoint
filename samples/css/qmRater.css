@@ -1,0 +1,23 @@
+/*
+    qmRater.css
+    
+    css declarations of rating control
+    
+*/
+
+.rating {
+    clear: both;
+    cursor: pointer;
+    display: block;
+    margin-top: 3px;
+}
+.rate {
+    float: left;
+    height: 15px;
+    overflow: hidden;
+    text-indent: -999em;
+    width: 17px;
+}
+.rate a {
+    display: block;
+}

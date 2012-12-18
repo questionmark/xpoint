@@ -27,17 +27,28 @@
               }
           }
          
-         display = "<li>" + displayName + " " + statement.verb.display[lang] + " " + statement.object.definition.name[lang] + displayScore(statement) + "</li>";
+         display = "<li>" + displayName + " " + statement.verb.display[lang] + " " + statement.object.definition.name[lang] + displayScore(statement) + displayResponse(statement) + "</li>";
 
 
           return display;
       }
 
+      function displayResponse(statement) {
+          var response = "";
+
+          if (getNotNullOrBlank(statement.result.response)) {
+              response = ' "' + statement.result.response + '"';
+          }
+
+          return response;
+      }
+
+
       function displayScore(statement) {
           var score = "";
 
           if ((statement.result != null) && (statement.result.score != null)) {
-              if ((statement.result.score.raw > 0) && (statement.result.score.scaled == 0.0)) {
+              if (statement.verb.id.contains('rated')) {
                   score = " " + statement.result.score.raw + " out of " + statement.result.score.max;
               } else {
                   score = " with score " + (statement.result.score.scaled) * 100 + "%"

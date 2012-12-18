@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <WebPart xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/WebPart/v2">
-  <Title>Submit statement to XPoint</Title>
+  <Title>Submit rating to XPoint</Title>
   <FrameType>None</FrameType>
   <Description />
   <IsIncluded>true</IsIncluded>
@@ -26,16 +26,29 @@
   <IsIncludedFilter />
   <Assembly>Microsoft.SharePoint, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c</Assembly>
   <TypeName>Microsoft.SharePoint.WebPartPages.SimpleFormWebPart</TypeName>
-  <Content xmlns="http://schemas.microsoft.com/WebPart/v2/SimpleForm"><![CDATA[
+  <Content xmlns="http://schemas.microsoft.com/WebPart/v2/SimpleForm">
+  <![CDATA[
 <script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/jquery.min.js"></script>
 <script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/qmERS.js"></script>
 <script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/qmSP.js"></script>
 <script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/qmERS.config.js"></script>
+<link rel="stylesheet" type="text/css" href="https://xpoint.questionmark.com/samples/css/qmRater.css" /> 
 
+<span id="rateTitle"></span>
+<div id="rating" class="rating">
+<span id="rateText"></span>
+</div>
 
 <script type="text/javascript">
-
-SubmitSPUserStatement("title","viewed", document.title);
+    WriteRating(
+    "Click on a star to rate this page",
+    "You have rated this page",
+    ["Poor", "Fair", "Good", "Very good", "Excellent"],
+    "https://xpoint.questionmark.com/samples/images/star.png",
+    "https://xpoint.questionmark.com/samples/images/star_grey.png",
+    SubmitSPUserRatedStatement,
+    "title",
+    document.title);
 
 </script>
 ]]></Content>

@@ -29,13 +29,54 @@ function SPUserStatement(userField, verb, object) {
     web = context.get_web();
     user = web.get_currentUser(); 
     context.load(user); 
-    context.executeQueryAsync(function (sender, args) { GetUserSuccess(userField, verb, object); }, GetUserFailed);
+    context.executeQueryAsync(function (sender, args) { GetUserViewedSuccess(userField, verb, object); }, GetUserFailed);
 }
 
-function GetUserSuccess(userField, verb, object) {
+function GetUserViewedSuccess(userField, verb, object) {
+    NotifyStatement(GetNameFromUser(userField), verb, object);
+}
+
+function SubmitSPUserRatedStatement(rating, max, userField, object) {
+    ExecuteOrDelayUntilScriptLoaded(function () { SPUserRatedStatement(userField, "rated", object, rating, max); }, "sp.js");
+}
+
+function SPUserRatedStatement(userField, verb, object, rating, max) {
+    context = SP.ClientContext.get_current();
+    web = context.get_web();
+    user = web.get_currentUser();
+    context.load(user);
+    context.executeQueryAsync(function (sender, args) { GetUserRatedSuccess(userField, verb, object, rating, max); }, GetUserFailed);
+}
+
+function GetUserRatedSuccess(userField, verb, object, rating, max) {
+    NotifyRating(GetNameFromUser(userField), verb, object, rating, max)
+}
+
+function SubmitSPUserCommentStatement(userField, object, comment) {
+    ExecuteOrDelayUntilScriptLoaded(function () { SPUserCommentStatement(userField, "commented", object, comment); }, "sp.js");
+}
+
+function SPUserCommentStatement(userField, verb, object, comment) {
+    context = SP.ClientContext.get_current();
+    web = context.get_web();
+    user = web.get_currentUser();
+    context.load(user);
+    context.executeQueryAsync(function (sender, args) { GetUserCommentSuccess(userField, verb, object, comment); }, GetUserFailed);
+}
+
+function GetUserCommentSuccess(userField, verb, object, comment) {
+    NotifyComment(GetNameFromUser(userField), verb, object, comment)
+}
+
+
+function GetUserFailed(sender, args) {
+    alert('error: ' + args.get_message() + '\n' + args.get_stackTrace());
+}
+
+function GetNameFromUser(field) {
     var userName = "Unknown";
 
-    switch (userField) {
+    switch (field) {
         case "title":
             userName = user.get_title();
             break;
@@ -51,13 +92,8 @@ function GetUserSuccess(userField, verb, object) {
         default:
             userName = "Unknown";
     }
-    NotifyStatement(userName, verb, object);
+
+    return userName;
 }
-
-function GetUserFailed(sender, args) {
-    alert('error: ' + args.get_message() + '\n' + args.get_stackTrace());
-}
-
-
 
 

@@ -20,7 +20,81 @@ Uses settings from qmERS.config.js for endpoint URL, account name etc
 
 function NotifyStatement(actor, verb, object) {
 
-    var statement = CreateStatement("en-US", actor, "", "", verb, object, object, window.location.href, "media", "", "", "", "");
+    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href, "media", "", "", "", "");
+
+    sendStatement(g_notify, statement, null, g_user, g_accountKey);
+
+}
+
+/* *******************************************
+Simple wrapper to submit a comment statement to XPoint 
+
+name - user name
+activity - name of the activity being rated
+comment - the comment made
+
+*/
+function SubmitCommentStatement(name, activity, comment) {
+    NotifyComment(name, "commented", activity, comment);
+}
+
+
+
+/* *******************************************
+Simple wrapper to submit a rating statement to XPoint 
+
+rating - the rating given
+max - the maximum rating possible
+name - user name
+activity - name of the activity being rated
+
+*/
+function SubmitRatingStatement(rating, max, name, activity) {
+    NotifyRating(name, "rated", activity, rating, max);
+}
+
+/* *******************************************
+Submit a rating statement to XPoint 
+<actor> <verb> <object> <score>
+actor - the name of the person the statement concerns
+verb - what the person did, see http://tincanapi.wikispaces.com/ADL+Experience+API+Companion+Document
+object - the name of activity the statement concerns
+rating - the rating given
+max - the maximum rating possible
+e.g.
+<John> <rated> <safety training> <4> out of <5>
+
+Uses settings from qmERS.config.js for endpoint URL, account name etc
+*/
+function NotifyRating(actor, verb, object, rating, max) {
+
+    var scaled = (rating / max);
+
+    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href, "media", scaled, rating, 0, max);
+
+    sendStatement(g_notify, statement, null, g_user, g_accountKey);
+
+}
+
+/* *******************************************
+Submit a comment statement to XPoint 
+<actor> <verb> <object> <response>
+actor - the name of the person the statement concerns
+verb - what the person did, see http://tincanapi.wikispaces.com/ADL+Experience+API+Companion+Document
+object - the name of activity the statement concerns
+comment - the comment given
+
+e.g.
+<John> <commented> <safety training> <very good>
+
+Uses settings from qmERS.config.js for endpoint URL, account name etc
+*/
+function NotifyComment(actor, verb, object, comment) {
+
+    // escape response text using fake div elment
+    var response = $('<div/>').text(comment).html()
+
+    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href, "media", 0, 0, 0, 0, response);
 
     sendStatement(g_notify, statement, null, g_user, g_accountKey);
 
@@ -72,7 +146,7 @@ scoreMax  - the maximum possible score in points - optional
 returns the statement as a JSON string
 
 */
-function CreateStatement(language, actorName, actorEmail, actorEmailHash, verb, activityName, activityDescription, activityId, activityType, scoreScaled, scoreRaw, scoreMin, scoreMax) {
+function CreateStatement(language, actorName, actorEmail, actorEmailHash, verb, activityName, activityDescription, activityId, activityType, scoreScaled, scoreRaw, scoreMin, scoreMax, response) {
 
     var _language = "en-US";
 
@@ -115,6 +189,11 @@ function CreateStatement(language, actorName, actorEmail, actorEmailHash, verb, 
     _statement.result.success = true;
     _statement.result.completion = true;
     _statement.result.setScore(scoreScaled, scoreRaw, scoreMin, scoreMax);
+
+    if (getNotNullOrBlank(response)) {
+        _statement.result.response = response;
+    }
+
 
     return _statement.getJSON();
 }
@@ -181,11 +260,123 @@ function sendStatement(endpoint, statement, resultHandler, user, password) {
 
     var url = endpoint + "?" + "Authorization=" + escape(authstring) + "&" + "statement=" + escape(statement);
 
-    $.getJSON(url, resultHandler);
+    $.ajax({
+        type: 'GET',
+        url: url,
+        async: false,
+        contentType: "application/json",
+        dataType: 'jsonp',
+        success: function (res) {
+            resultHandler(res);
+        }
+    });
 
 }
 
+/* *******************************************
+write a rating control to get a numeric rating from the user and submit a rating statement
 
+unRatedTitle - the title of the rating control before rating, e.g. "Rate this page"
+ratedTitle  - the title of the rating control after rating, e.g. "This page has been rated"
+ratings - an array of possible ratings
+onImage - URL of image to use for selected rating
+offImage - URL of image to use for selected rating
+submitFunction - function to call to submit the rating statement
+userName - name of the current user if known
+activity - the name of the actvity being rated
+
+Must be preceeded by HTML places holders as follows :
+<span id="rateTitle"></span>
+<div id="rating" class="rating">
+<span id="rateText"></span>
+</div>
+
+*/
+
+// internal variables used by rating control
+var g_isRated = false;
+var g_unrateTitle
+var g_rateTitle;
+var g_rateArray;
+var g_rateImage;
+var g_unrateImage;
+var g_submitRatingFunction;
+var g_ratingUserName;
+var g_ratingActivity;
+
+function WriteRating(unRatedTitle, ratedTitle, ratings, onImage, offImage, submitFunction, userName, activity) {
+
+    g_unrateTitle = unRatedTitle;
+    g_rateTitle = ratedTitle;
+    g_rateArray = ratings;
+    g_rateImage = onImage;
+    g_unrateImage = offImage;
+
+    g_submitRatingFunction = submitFunction;
+    g_ratingUserName = userName;
+    g_ratingActivity = activity;
+
+    $('#rateTitle').html(g_unrateTitle);
+
+    for (i = 0; i < g_rateArray.length; i++) {
+        $('#rating').append('<div id="rate' + (i + 1) + '" class="rate"><a id="' + (i + 1) + '">' + (i + 1) + '</a></div>');
+    }
+
+    for (i = 1; i <= g_rateArray.length; i++) {
+        $('#rate' + i).css({ background: 'url("' + g_unrateImage + '") no-repeat scroll 0 0 transparent' });
+    }
+
+    $('.rate a').hover(function () {
+        if (g_isRated) return;
+
+        for (i = 1; i <= this.id; i++) {
+            $('#rate' + i).css({ background: 'url("' + g_rateImage + '")' });
+        }
+        $('#rateText').css('visibility', "visible");
+        $('#rateText').html('&nbsp;' + g_rateArray[this.id - 1]);
+
+    });
+
+    $('.rate a').mouseout(function () {
+
+        if (g_isRated) {
+            return;
+        } else {
+            $('#rateText').css({ visibility: "hidden" });
+            for (i = 1; i <= g_rateArray.length; i++) {
+                $('#rate' + i).css({ background: 'url("' + g_unrateImage + '")' });
+            }
+
+        }
+    });
+
+    $('a').click(function () {
+        if (g_isRated) return;
+        g_isRated = true;
+
+        // hide the control
+        $("#rating").fadeOut(300);
+        $('#rateTitle').fadeOut(300, function () { $('#rateTitle').html(g_rateTitle); });
+
+        // get rating as integer
+        var ratingValue = parseInt($(this).text());
+
+        // remove unrated stars
+        $('#rating').css({ cursor: 'default' });
+        for (i = ratingValue + 1; i <= g_rateArray.length; i++) {
+            $('#rate' + i).css({ background: 'none' });
+        }
+       
+        // submit the statements
+        g_submitRatingFunction(ratingValue, g_rateArray.length, g_ratingUserName, g_ratingActivity);
+
+        // show it again
+        $("#rating").fadeIn();
+        $('#rateTitle').fadeIn();
+    });
+}
+
+/* statement elements */
 function Actor() {
     this.objectType = "Agent";
 }
@@ -283,6 +474,7 @@ function getVerbId(verb) {
 }
 
 
+/* various utility functions */
 
 function getNotNullOrBlank(obj) {
     return ((typeof obj != "undefined") && (obj != ""));
@@ -295,25 +487,16 @@ function getBasicAuthHeader(user, password) {
   return "Basic " + hash;
 }
 
-function getSpName() {
-    var name = "Anonymous";
-
-    try {
-        name = $().SPServices.SPGetCurrentUser({ fieldName: "Title", debug: false });
-    }
-    catch (err) { }
-
-    if (getNotNullOrBlank(name)) {
-        return name;
-    } else {
-        return "Anonymous";
-    }
-}
 
 
 /* String truncate with ellipsis */
 String.prototype.trunc = function (value) {
     return this.substr(0, value - 1) + (this.length > value ? '...' : '');
+};
+
+/* string contains substring test */
+String.prototype.contains = function (it) {
+    return this.indexOf(it) != -1;
 };
 
 // Base64 encoding
