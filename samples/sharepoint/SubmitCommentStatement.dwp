@@ -36,7 +36,7 @@
 <script type="text/javascript">
 
     function DoCommentSubmit() {
-        SubmitSPCommentStatement('Unknown', document.title, $('#commentText').val());
+        SubmitSPUserCommentStatement('title', document.title, $('#commentText').val());
         $('#commentText').attr("disabled", "disabled");
         $('#commentText').css("resize", "none");
         $('#submitComment').css('visibility', "hidden");
