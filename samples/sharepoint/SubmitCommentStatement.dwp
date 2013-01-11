@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WebPart xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/WebPart/v2">
+  <Title>Submit comment to XPoint</Title>
+  <FrameType>None</FrameType>
+  <Description />
+  <IsIncluded>true</IsIncluded>
+  <ZoneID>wpz</ZoneID>
+  <PartOrder>0</PartOrder>
+  <FrameState>Normal</FrameState>
+  <Height />
+  <Width />
+  <AllowRemove>true</AllowRemove>
+  <AllowZoneChange>true</AllowZoneChange>
+  <AllowMinimize>false</AllowMinimize>
+  <AllowConnect>false</AllowConnect>
+  <AllowEdit>false</AllowEdit>
+  <AllowHide>true</AllowHide>
+  <IsVisible>true</IsVisible>
+  <DetailLink />
+  <HelpLink />
+  <HelpMode>Modeless</HelpMode>
+  <Dir>Default</Dir>
+  <PartImageSmall />
+  <MissingAssembly>Cannot import this Web Part.</MissingAssembly>
+  <PartImageLarge>/_layouts/images/mssfwp.gif</PartImageLarge>
+  <IsIncludedFilter />
+  <Assembly>Microsoft.SharePoint, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c</Assembly>
+  <TypeName>Microsoft.SharePoint.WebPartPages.SimpleFormWebPart</TypeName>
+  <Content xmlns="http://schemas.microsoft.com/WebPart/v2/SimpleForm">
+  <![CDATA[
+<script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/jquery.min.js"></script>
+<script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/qmERS.js"></script>
+<script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/qmSP.js"></script>
+<script type="text/javascript" src="https://xpoint.questionmark.com/samples/javascript/qmERS.config.js"></script>
+
+<script type="text/javascript">
+
+    function DoCommentSubmit() {
+        SubmitSPCommentStatement('Unknown', document.title, $('#commentText').val());
+        $('#commentText').attr("disabled", "disabled");
+        $('#commentText').css("resize", "none");
+        $('#submitComment').css('visibility', "hidden");
+        $('#commentTitle').html("Thank you for your comments");
+    }
+
+</script>
+
+<style type="text/css">
+
+    
+    .commentBox
+    {
+        font-family: verdana,arial,helvetica,sans-serif;
+        font-size: 8pt;
+        padding-left: 25px;
+        width: auto;
+    }
+
+    .commentButton
+    {
+        font-family: verdana,arial,helvetica,sans-serif;
+        font-size: 8pt;
+    }
+
+    .commentText
+    {
+        font-family: verdana,arial,helvetica,sans-serif;
+        font-size: 8pt;
+    }
+
+</style>
+
+
+<table class="commentBox">
+    <tr>
+        <td colspan="2" align="center"><span class="commentTitle" id="commentTitle">Comment on this page</span></td>
+    </tr>
+    <tr>
+        <td><textarea id="commentText" class="commentText" rows="2" cols="50"></textarea></td>
+        <td><input id="submitComment" type="button" class="commentButton" value="Submit your comment" onclick="DoCommentSubmit();" /></td>
+    </tr>
+</table>
+
+
+]]></Content>
+</WebPart>
