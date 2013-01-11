@@ -448,22 +448,23 @@ var ADL_VERBS = ["experienced", "attended", "attempted", "completed", "passed", 
 var ADL_VERB_URI = "http://adlnet.gov/expapi/verbs/";
 var QUESTIONMARK_VERB_URI = "http://questionmark.com/expapi/verbs/";
 
-Array.prototype.contains = function (obj) {
-    var i = this.length;
+
+
+function ArrayContainsItem(theArray, theItem) {
+    var i = theArray.length;
     while (i--) {
-        if (this[i] == obj) {
+        if (theArray[i] == theItem) {
             return true;
         }
     }
     return false;
 }
 
-
 function getVerbId(verb) {
 
     var verbId = verb;
 
-    if (ADL_VERBS.contains(verb)) {
+    if (ArrayContainsItem(ADL_VERBS,verb)) {
         verbId = ADL_VERB_URI + verb;
     } else {
         verbId = QUESTIONMARK_VERB_URI + verb;
