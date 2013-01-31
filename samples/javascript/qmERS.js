@@ -20,7 +20,7 @@ Uses settings from qmERS.config.js for endpoint URL, account name etc
 
 function NotifyStatement(actor, verb, object) {
 
-    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href, "media", "", "", "", "");
+    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href.removeHash(), "media", "", "", "", "");
 
     sendStatement(g_notify, statement, null, g_user, g_accountKey);
 
@@ -70,7 +70,7 @@ function NotifyRating(actor, verb, object, rating, max) {
 
     var scaled = (rating / max);
 
-    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href, "media", scaled, rating, 0, max);
+    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href.removeHash(), "media", scaled, rating, 0, max);
 
     sendStatement(g_notify, statement, null, g_user, g_accountKey);
 
@@ -94,7 +94,7 @@ function NotifyComment(actor, verb, object, comment) {
     // escape response text using fake div elment
     var response = $('<div/>').text(comment).html()
 
-    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href, "media", 0, 0, 0, 0, response);
+    var statement = CreateStatement(g_language, actor, "", "", verb, object, object, window.location.href.removeHash(), "media", 0, 0, 0, 0, response);
 
     sendStatement(g_notify, statement, null, g_user, g_accountKey);
 
@@ -155,7 +155,7 @@ function CreateStatement(language, actorName, actorEmail, actorEmailHash, verb, 
     }
 
     if ((typeof activityId == "undefined") || (activityId == "")) {
-        activityId = window.location.href;
+        activityId = window.location.href.removeHash();
     }
 
     if ((typeof activityType == "undefined") || (activityType == "")) {
@@ -258,7 +258,7 @@ function sendStatement(endpoint, statement, resultHandler, user, password) {
  
     var authstring = "Basic " + Base64(user + ':' + password);
 
-    var url = endpoint + "?" + "Authorization=" + escape(authstring) + "&" + "statement=" + escape(statement);
+    var url = endpoint + "?" + "Authorization=" + escape(authstring) + "&" + "statement=" + encodeURI(statement);
 
     $.ajax({
         type: 'GET',
@@ -350,7 +350,7 @@ function WriteRating(unRatedTitle, ratedTitle, ratings, onImage, offImage, submi
         }
     });
 
-    $('a').click(function () {
+    $('.rate a').click(function () {
         if (g_isRated) return;
         g_isRated = true;
 
@@ -500,6 +500,11 @@ String.prototype.contains = function (it) {
     return this.indexOf(it) != -1;
 };
 
+/* remove '#' and everything following it from end of string */
+String.prototype.removeHash = function () {
+    var parts = this.split('#');
+    return parts[0];
+};
 // Base64 encoding
 
 var _PADCHAR = "=",

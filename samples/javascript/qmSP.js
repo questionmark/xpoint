@@ -13,23 +13,30 @@ SubmitSPUserStatement("title","viewed", document.title);
 
 Uses settings from qmERS.config.js or equivalent for endpoint URL, user name, password etc
 */
-function SubmitSPUserStatement(userField, verb, object) {
-    ExecuteOrDelayUntilScriptLoaded(function () { SPUserStatement(userField, verb, object); }, "sp.js");
-}
 
+// name to use for unknown users
+var UnknownUserName = "Unknown";
 
 // globals used for Sharepoint calls
 var web;
 var context;
 var user;
 
+function SubmitSPUserStatement(userField, verb, object) {
+    ExecuteOrDelayUntilScriptLoaded(function () { SPUserStatement(userField, verb, object); }, "sp.js");
+}
 
 function SPUserStatement(userField, verb, object) {
-    context = SP.ClientContext.get_current();
-    web = context.get_web();
-    user = web.get_currentUser(); 
-    context.load(user); 
-    context.executeQueryAsync(function (sender, args) { GetUserViewedSuccess(userField, verb, object); }, GetUserFailed);
+    try {
+        context = SP.ClientContext.get_current();
+        web = context.get_web();
+        user = web.get_currentUser(); 
+        context.load(user); 
+        context.executeQueryAsync(function (sender, args) { GetUserViewedSuccess(userField, verb, object); }, function (sender, args) { NotifyStatement(UnknownUserName, verb, object); });
+    }
+    catch (e) {
+        NotifyStatement(UnknownUserName, verb, object);
+    }
 }
 
 function GetUserViewedSuccess(userField, verb, object) {
@@ -41,11 +48,18 @@ function SubmitSPUserRatedStatement(rating, max, userField, object) {
 }
 
 function SPUserRatedStatement(userField, verb, object, rating, max) {
-    context = SP.ClientContext.get_current();
-    web = context.get_web();
-    user = web.get_currentUser();
-    context.load(user);
-    context.executeQueryAsync(function (sender, args) { GetUserRatedSuccess(userField, verb, object, rating, max); }, GetUserFailed);
+
+    try {
+        context = SP.ClientContext.get_current();
+        web = context.get_web();
+        user = web.get_currentUser();
+        context.load(user);
+        context.executeQueryAsync(function (sender, args) { GetUserRatedSuccess(userField, verb, object, rating, max); }, function (sender, args) { NotifyRating(UnknownUserName, verb, object, rating, max); });
+    }
+    catch (e) {
+
+    }
+
 }
 
 function GetUserRatedSuccess(userField, verb, object, rating, max) {
@@ -57,11 +71,16 @@ function SubmitSPUserCommentStatement(userField, object, comment) {
 }
 
 function SPUserCommentStatement(userField, verb, object, comment) {
-    context = SP.ClientContext.get_current();
-    web = context.get_web();
-    user = web.get_currentUser();
-    context.load(user);
-    context.executeQueryAsync(function (sender, args) { GetUserCommentSuccess(userField, verb, object, comment); }, GetUserFailed);
+    try {
+        context = SP.ClientContext.get_current();
+        web = context.get_web();
+        user = web.get_currentUser();
+        context.load(user);
+        context.executeQueryAsync(function (sender, args) { GetUserCommentSuccess(userField, verb, object, comment); }, function (sender, args) { NotifyComment(UnknownUserName, verb, object, comment); });
+    }
+    catch(e) {
+
+    }
 }
 
 function GetUserCommentSuccess(userField, verb, object, comment) {
@@ -69,28 +88,31 @@ function GetUserCommentSuccess(userField, verb, object, comment) {
 }
 
 
-function GetUserFailed(sender, args) {
-    alert('error: ' + args.get_message() + '\n' + args.get_stackTrace());
-}
 
 function GetNameFromUser(field) {
-    var userName = "Unknown";
+    var userName = UnknownUserName;
 
-    switch (field) {
-        case "title":
-            userName = user.get_title();
-            break;
-        case "id":
-            userName = user.get_id();
-            break;
-        case "login":
-            userName = user.get_loginName();
-            break;
-        case "email":
-            userName = user.get_email();
-            break;
-        default:
-            userName = "Unknown";
+    try {
+        if (getNotNullOrBlank(user)) {
+            switch (field) {
+                case "title":
+                    userName = user.get_title();
+                    break;
+                case "id":
+                    userName = user.get_id();
+                    break;
+                case "login":
+                    userName = user.get_loginName();
+                    break;
+                case "email":
+                    userName = user.get_email();
+                    break;
+                default:
+                    userName = UnknownUserName;
+            }
+        }
+    }
+    catch(e) {
     }
 
     return userName;
