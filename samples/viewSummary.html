@@ -1,0 +1,337 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<title>View the statements for your XPoint account</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script  type="text/javascript" src="javascript/jquery.min.js"></script>
+  <script type="text/javascript" src="javascript/qmERS.js"></script>
+  
+<style type="text/css">
+
+body { font-family: Arial, Helvetica, sans-serif; }
+li.more { cursor: pointer; }
+img.more { cursor: pointer; }
+#banner {position: absolute; height: 67px; width: 960px; background-image: url('images/qmHeader.png'); background-repeat: no-repeat;}
+
+#title {position: absolute;  font-size: x-large; left: 330px; top: 20px; width: auto;}
+#login { position: absolute;  left: 30px; top: 100px; }
+#formArea {position: absolute;  text-align: right; left: 30px; top: 180px }
+#resultsArea {position: absolute;   left: 30px; top: 340px }
+#prevBtn {position: absolute;   left: 40px; width: 80px; }
+#nextBtn {position: absolute;   left: 160px; width: 80px; }
+#allView { visibility:  hidden; }
+#actorView { visibility:  hidden; }
+#verbView { visibility:  hidden; }
+#objectView { visibility:  hidden; }
+#allExcel { visibility:  hidden; }
+#actorExcel { visibility:  hidden; }
+#verbExcel { visibility:  hidden; }
+#objectExcel { visibility:  hidden; }
+
+#allCount {font-size: large;}
+#actorCount {font-size: large;}
+#verbCount {font-size: large;}
+#objectCount {font-size: large;} 
+
+
+</style>
+
+</head>
+<body>
+
+<div id="banner">
+<span id="title">View the statements for your XPoint account</span>
+</div>
+
+
+<br>
+<div id="login">
+Account <input type="text" id="account" name="account" value="" size="18" />    User name <input type="text" id="user" name="user" value="" size="18" /> &nbsp; Password <input type="password" id="password" name="password" value="" size="40" /> &nbsp;&nbsp;<img id="reload" onclick="ShowCounts();" title="Show statement summary" alt="refresh" src="images/reload.png" class="more" /><br />
+</div>
+<div id="formArea">
+
+<span id="allCount"></span>&nbsp;&nbsp;<img id="allView" onclick="ShowAll('');" title="View statements" alt="view" src="images/ie.jpg" class="more" />&nbsp;<img id="allExcel" title="View statements in Excel" alt="excel" src="images/excel.jpg" class="more" onclick="ShowAllExcel();" /><br />
+<span id="actorCount"></span>&nbsp;&nbsp;<img id="actorView" onclick="ShowActors();" title="View people" alt="view" src="images/ie.jpg" class="more" />&nbsp;<img id="actorExcel" title="View people in Excel" alt="excel" src="images/excel.jpg" class="more" onclick="ShowActorsExcel();" /><br />
+<span id="verbCount"></span>&nbsp;&nbsp;<img  id="verbView" onclick="ShowVerbs();" title="View verbs" alt="view" src="images/ie.jpg" class="more" />&nbsp;<img id="verbExcel" title="View verbs in Excel" alt="excel" src="images/excel.jpg" class="more" onclick="ShowVerbsExcel();" /><br />
+<span id="objectCount"></span>&nbsp;&nbsp;<img id="objectView" onclick="ShowObjects();" title="View activities" alt="view" src="images/ie.jpg" class="more" />&nbsp;<img id="objectExcel" title="View activities in Excel" alt="excel" src="images/excel.jpg" class="more" onclick="ShowObjectsExcel();" /><br />
+
+
+</div>
+ 
+<div id="resultsArea">
+<span id="prev"></span>&nbsp;<span id="next"></span>
+<br />
+<ul id="statementList"></ul>
+</div>
+
+
+
+    <script type="text/javascript">
+
+        var g_baseURL = "https://xpoint.questionmark.com/";
+        var g_currentEndpoint = "";
+        var g_language = "en-US";
+
+        var g_currentAccount = "";
+        var g_currentUser = "";
+        var g_currentKey = "";
+        var g_authString = "";
+       
+
+        function displayStatement(statement, lang) {
+
+            var display = "";
+
+            var displayName = "Unknown";
+
+            if (statement.actor.name != null) {
+                displayName = statement.actor.name;
+            } else {
+                if (statement.actor.mbox != null) {
+                    displayName = statement.actor.mbox
+                } else {
+                    if (statement.actor.account != null) {
+                        displayName = statement.actor.account.homePage + '/' + statement.actor.account.name;
+                    }
+                }
+            }
+         
+            var d = new Date(statement.stored);
+
+            display = "<li>" + d.toLocaleString() + " " + displayName + " " + statement.verb.display[lang] + " " + statement.object.definition.name[lang] + displayScore(statement) + displayResponse(statement) + "</li>";
+
+
+            return display;
+        }
+
+        function displayResponse(statement) {
+            var response = "";
+
+            if (getNotNullOrBlank(statement.result.response)) {
+                response = ' "' + statement.result.response + '"';
+            }
+
+            return response;
+        }
+
+
+        function displayScore(statement) {
+            var score = "";
+
+            if ((statement.result != null) && (statement.result.score != null)) {
+                if (statement.verb.id.contains('rated')) {
+                    score = " " + statement.result.score.raw + " out of " + statement.result.score.max;
+                } else {
+                    score = " with score " + Math.round((statement.result.score.scaled) * 100) + "%"
+                } 
+            }
+
+            return score;
+        }
+
+        function displayNext(next) {
+
+            var display = '<input id="nextBtn" type="button" value="&gt;&gt;" onclick="ShowAll(\'' + next + '\')" />';
+
+            return display;
+        }
+
+        function displayPrev(prev) {
+
+            var display = '<input id="prevBtn" type="button" value="&lt;&lt;" onclick="ShowAll(\'' + prev + '\')" />';
+
+            return display;
+        }
+
+        var displayAllFunc = function DisplayAll(res) {
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+            var statements = res.statements;
+
+            $.each(statements, function () {
+                $("#statementList").append(displayStatement(this, g_language));
+            });
+
+
+            if (res.next != null) {
+                $("#next").append(displayNext(res.next));
+            }
+            if (res.previous != null) {
+                $("#prev").append(displayPrev(res.previous));
+            }
+        }
+
+        var displayActorFunc = function DisplayActors(res) {
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+
+            //$("#statementList").append("<p><b>" + res.count + " people found</b></p>");
+
+            $.each(res.actors, function () {
+                $("#statementList").append('<li class="more" onclick="ShowAll(\'?name=' + encodeURI(this.actor) + '\')">' + this.actor + " " + this.count + "</li>");
+            });
+
+
+            if (res.next != null) {
+                $("#next").append(displayNext(res.next));
+            }
+            if (res.previous != null) {
+                $("#prev").append(displayPrev(res.previous));
+            }
+        }
+
+      
+
+        var displayVerbFunc = function DisplayVerbs(res) {
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+        
+
+            //$("#statementList").append("<p><b>" + res.count + " verbs found</b></p>");
+
+            $.each(res.verbs, function () {
+                $("#statementList").append('<li class="more" onclick="ShowAll(\'?verb=' + encodeURI(this.verb) + '&lang=' + g_language + '\')">' + this.verb + " " + this.count + "</li>");
+            });
+
+
+            if (res.next != null) {
+                $("#next").append(displayNext(res.next));
+            }
+            if (res.previous != null) {
+                $("#prev").append(displayPrev(res.previous));
+            }
+        }
+
+        var displayObjectFunc = function DisplayObjects(res) {
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+
+            //$("#statementList").append("<p><b>" + res.count + " activities found</b></p>");
+
+            $.each(res.activities, function () {
+                $("#statementList").append('<li class="more" onclick="ShowAll(\'?activity=' + encodeURI(this.activity) + '\')">' + this.activity + " " + this.count + "</li>");
+            });
+
+
+            if (res.next != null) {
+                $("#next").append(displayNext(res.next));
+            }
+            if (res.previous != null) {
+                $("#prev").append(displayPrev(res.previous));
+            }
+        }
+
+        function ShowAll(query) {
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+            callERS(g_currentEndpoint, query, "GET", 0.95, "", displayAllFunc, g_currentUser, g_currentKey);
+        }
+
+        function ShowAllExcel() {
+            window.location = g_currentEndpoint + "?$top=10000&$format=csv&Authorization=" + g_authString;
+        }
+
+        function ShowActors() {
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+            callERS(g_currentEndpoint, "actor/summary", "GET", 0.95, "", displayActorFunc, g_currentUser, g_currentKey);
+        }
+
+        function ShowActorsExcel() {
+            window.location = g_currentEndpoint + "actor/summary?$top=10000&$format=csv&Authorization=" + g_authString;
+        }
+
+        function ShowVerbs() {
+
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+            callERS(g_currentEndpoint, "verb/summary", "GET", 0.95, "", displayVerbFunc, g_currentUser, g_currentKey);
+        }
+
+        function ShowVerbsExcel() {
+            window.location = g_currentEndpoint + "verb/summary?$top=10000&$format=csv&Authorization=" + g_authString;
+        }
+
+        function ShowObjects() {
+
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+            callERS(g_currentEndpoint, "activity/summary" , "GET", 0.95, "", displayObjectFunc, g_currentUser, g_currentKey);
+        }
+
+        function ShowObjectsExcel() {
+            window.location = g_currentEndpoint + "activity/summary?$top=10000&$format=csv&Authorization=" + g_authString;
+        }
+
+        function ShowCounts() {
+
+            $("#statementList").html('');
+            $("#prev").html('');
+            $("#next").html('');
+
+            $('#allView').css('visibility', "hidden");
+            $('#allExcel').css('visibility', "hidden");
+            $('#verbView').css('visibility', "hidden");
+            $('#verbExcel').css('visibility', "hidden");
+            $('#actorView').css('visibility', "hidden");
+            $('#actorExcel').css('visibility', "hidden");
+            $('#objectView').css('visibility', "hidden");
+            $('#objectExcel').css('visibility', "hidden");
+
+            $("#allCount").html('');
+            $("#actorCount").html('');
+            $("#verbCount").html('');
+            $("#objectCount").html('');
+
+            g_currentAccount = $('#account').val();
+            g_currentUser = $('#user').val();
+            g_currentKey = $('#password').val();
+            g_authString = escape("Basic " + Base64(g_currentUser + ':' + g_currentKey));
+            g_currentEndpoint = g_baseURL + g_currentAccount + "/statements/";
+
+            callERS(g_currentEndpoint, "total", "GET", 0.95, "", function (count) { AllCount(count); }, g_currentUser, g_currentKey);
+            callERS(g_currentEndpoint, "actor/total", "GET", 0.95, "", function (count) { ActorCount(count); }, g_currentUser, g_currentKey);
+            callERS(g_currentEndpoint, "verb/total", "GET", 0.95, "", function (count) { VerbCount(count); }, g_currentUser, g_currentKey);
+            callERS(g_currentEndpoint, "activity/total", "GET", 0.95, "", function (count) { ObjectCount(count); }, g_currentUser, g_currentKey);
+        }
+
+        function AllCount(count) {
+            $("#allCount").html(count + " statements");
+            $('#allView').css('visibility', "visible");
+            $('#allExcel').css('visibility', "visible");
+        }
+
+        function VerbCount(count) {
+            $("#verbCount").html(count + " verbs");
+            $('#verbView').css('visibility', "visible");
+            $('#verbExcel').css('visibility', "visible");
+        }
+
+        function ActorCount(count) {
+            $("#actorCount").html(count + " people");
+            $('#actorView').css('visibility', "visible");
+            $('#actorExcel').css('visibility', "visible");
+        }
+
+        function ObjectCount(count) {
+            $("#objectCount").html(count + " activities");
+            $('#objectView').css('visibility', "visible");
+            $('#objectExcel').css('visibility', "visible");
+        }
+
+   
+ 
+
+
+</script>
+
+</body>
+</html>
