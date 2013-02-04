@@ -258,7 +258,7 @@ function sendStatement(endpoint, statement, resultHandler, user, password) {
  
     var authstring = "Basic " + Base64(user + ':' + password);
 
-    var url = endpoint + "?" + "Authorization=" + escape(authstring) + "&" + "statement=" + encodeURI(statement);
+    var url = endpoint + "?" + "Authorization=" + escape(authstring) + "&" + "statement=" + encodeURIComponent(statement);  
 
     $.ajax({
         type: 'GET',
