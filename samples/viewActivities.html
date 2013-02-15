@@ -24,7 +24,7 @@
         var activities = res.activities;
 
         $.each(activities, function () {
-            $("#activities").append("<option>" + this.definition.name[g_language] + "</option>");
+            $("#activities").append("<option>" + this.activity + "</option>");
         });
 
         GetActivitySummary();
@@ -41,20 +41,19 @@
         data.addRows(res.count);
 
         var verbs = res.verbs;
+        var total = 0;
 
         var row = 0;
         $.each(verbs, function () {
-            //$("#result").append("<option>" + this.display[g_language] + " : " + this.count + "<br />");
-
-            data.setCell(row, 0, this.count + " " + this.display[g_language] );
+            data.setCell(row, 0, this.count + " " + this.verb );
             data.setCell(row, 1, this.count);
-
             row += 1;
+            total += this.count;
         });
 
 
         var chart = new google.visualization.PieChart(document.getElementById('result'));
-        var title = $('#activities>option:selected').text() + " : " + res.total + " results";
+        var title = $('#activities>option:selected').text() + " : " + total + " results";
         chart.draw(data, { width: 600, height: 600, title: title });
 
     }
