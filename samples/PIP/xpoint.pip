@@ -1,0 +1,29 @@
+; XPoint.pip
+; call XPoint with assessment result as JSON activity statement
+; usage :
+; http://localhost/perception5/session.php?call=xpoint&assessmentId=2300408448380466&Name=Paul&Email=paul@test.com
+
+[Input]
+; authorization string for XPoint public test account
+Authorization="Basic cHJvZHVjZXI6bnlrVXYyYXJvR2ZZR3h3WEJvZkd3R3hDVkxFNjF2NTQ="
+
+[Settings]
+; URL to XPoint Connector for public test account
+Notify=https://xpoint.questionmark.com/public/notify/
+UseNotify=yes
+Method=POST
+Header=Content-Type: application/x-www-form-urlencoded
+OutputFormat=%s=%s&
+
+
+[Output]
+Authorization=Authorization
+Id=%SESSION.ID%
+Provider=%SESSION.URL%
+Title=%SESSION.TITLE%
+UserName=%SESSION.USER%
+UserEmail=Email
+PercentScore=%SESSION.PERCENT%
+RawScore=%SESSION.SCORE%
+MaxScore=%SESSION.MAX%
+Outcome=%SESSION.SCOREBAND%
